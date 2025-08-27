@@ -3,7 +3,7 @@ name: Deploy Partner Panel
 on:
   push:
     branches:
-      - main   # deploy only when main branch is pushed
+      - main
 
 jobs:
   deploy-partner:
@@ -31,13 +31,13 @@ jobs:
       # 4️⃣ Install dependencies & build Partner Panel
       - name: Build Partner Panel
         run: |
-          cd smsreactpartnerpannel
+          cd smsreactpartnerpannel-sharmila
           npm ci
           npm run build
 
-      # 5️⃣ Deploy to S3 – ensure correct folder structure
+      # 5️⃣ Deploy to S3 – correct folder structure
       - name: Deploy Partner to S3
-        run: aws s3 sync smsreactpartnerpannel/dist/ s3://sms-frontend-all1/partner --delete
+        run: aws s3 sync smsreactpartnerpannel-sharmila/dist/ s3://sms-frontend-all1/partner --delete
 
       # 6️⃣ Invalidate CloudFront cache
       - name: Invalidate CloudFront
