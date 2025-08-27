@@ -1,33 +1,37 @@
-name: Deploy React App to S3
+name: Deploy Admin Panel
 
 on:
   push:
     branches:
-      - main   # whenever you push to main, it deploys
+      - main  # deploy happens on push to main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      # 1. Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v3
 
+      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: npm install
+      # 3. Install dependencies & Build
+      - name: Install & Build
+        run: |
+          cd smsreactadminpannel
+          npm install
+          npm run build
 
-      - name: Build app
-        run: npm run build
-
+      # 4. Deploy to S3
       - name: Deploy to S3
-        uses: aws-actions/s3-sync@v2
+        uses: aws-actions/s3-sync@v1
         with:
-          source-dir: build/   # or dist/ if your build folder is dist
+          source-dir: smsreactadminpannel/build  # adjust if build folder is different
           dest-bucket: sms-frontend-all1
           delete: true
         env:
