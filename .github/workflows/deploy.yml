@@ -1,43 +1,36 @@
-name: Deploy Partner Panel
+name: Deploy React App to S3
 
 on:
   push:
     branches:
-      - main
+      - main   # whenever you push to main, it deploys
 
 jobs:
-  deploy-partner:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repo
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      # 2️⃣ Setup Node.js
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
-      # 3️⃣ Configure AWS credentials
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build app
+        run: npm run build
+
+      - name: Deploy to S3
+        uses: aws-actions/s3-sync@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      # 4️⃣ Install dependencies & build (no cd needed)
-      - name: Build Partner Panel
-        run: |
-          npm ci
-          npm run build
-
-      # 5️⃣ Deploy to S3 – ensure correct folder structure
-      - name: Deploy Partner to S3
-        run: aws s3 sync dist/ s3://sms-frontend-all1/partner --delete
-
-      # 6️⃣ Invalidate CloudFront cache
-      - name: Invalidate CloudFront
-        run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/partner/*"
+          source-dir: build/   # or dist/ if your build folder is dist
+          dest-bucket: sms-frontend-all1
+          delete: true
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ap-south-1
