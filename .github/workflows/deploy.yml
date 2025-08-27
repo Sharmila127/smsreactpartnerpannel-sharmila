@@ -2,42 +2,41 @@ name: Deploy Partner Panel
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  deploy-partner:
+  build-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repo
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-      # 2️⃣ Setup Node.js
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
-      # 3️⃣ Configure AWS credentials
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Install dependencies
+        run: npm install
 
-      # 4️⃣ Install dependencies & build (no cd needed)
-      - name: Build Partner Panel
+      - name: Build project
+        run: npm run build
+
+      - name: Upload to S3
         run: |
-          npm ci
-          npm run build
+          aws s3 sync ./dist s3://sms-frontend-all/partner --delete
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ap-south-1
 
-      # 5️⃣ Deploy to S3 – ensure correct folder structure
-      - name: Deploy Partner to S3
-        run: aws s3 sync dist/ s3://sms-frontend-all1/partner --delete
-
-      # 6️⃣ Invalidate CloudFront cache
-      - name: Invalidate CloudFront
-        run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/partner/*"
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id YOUR_DISTRIBUTION_ID \
+            --paths "/partner/*"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ap-south-1
