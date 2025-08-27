@@ -26,9 +26,9 @@ jobs:
 
       # 4️⃣ Build project
       - name: Build project
-        run: npm run build   # for Vite use 'build', for CRA it will output 'build' folder
+        run: npm run build   # For Vite use 'build', for CRA change folder to ./build
 
-      # 5️⃣ Sync build folder to S3
+      # 5️⃣ Upload build folder to S3
       - name: Upload to S3
         run: aws s3 sync ./dist s3://sms-frontend-all1/partner --delete
         env:
@@ -36,7 +36,11 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ap-south-1
 
-      # 6️⃣ CloudFront cache invalidation
+      # 6️⃣ Debug CloudFront ID (optional, ensures secret is set)
+      - name: Debug CloudFront ID
+        run: echo "CloudFront ID is '${{ secrets.CLOUDFRONT_DIST_ID }}'"
+
+      # 7️⃣ Invalidate CloudFront cache
       - name: Invalidate CloudFront cache
         run: |
           aws cloudfront create-invalidation \
