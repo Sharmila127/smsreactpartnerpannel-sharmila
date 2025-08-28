@@ -3,10 +3,18 @@ import react from '@vitejs/plugin-react-swc';
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/partner/',   // 👈 Partner app path
+  base: './', 
   plugins: [react()],
   build: {
-    outDir: 'dist',
-    assetsDir: 'assets',
+    outDir: 'dist',    // Output folder
+    assetsDir: 'assets', // Folder for static assets
+    rollupOptions: {
+      output: {
+        // Optional: split vendor files if needed
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+        },
+      },
+    },
   },
 });
